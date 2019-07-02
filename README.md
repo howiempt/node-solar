@@ -1,5 +1,6 @@
 # node-solar
 node express app reporting growatt solar power values
+hastily ported from [https://github.com/Sjord/growatt_api_client](https://github.com/Sjord/growatt_api_client)
 
 # endpoints:
 ```
