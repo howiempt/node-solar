@@ -1,6 +1,7 @@
-# node-solar
+# node-solar :partly_sunny:
 node express app reporting growatt solar power values
-hastily ported from [https://github.com/Sjord/growatt_api_client](https://github.com/Sjord/growatt_api_client)
+
+hastily ported from [https://github.com/Sjord/growatt_api_client](https://github.com/Sjord/growatt_api_client) :sunglasses:
 
 # endpoints:
 ```
