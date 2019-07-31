@@ -89,7 +89,12 @@ export function login(username: string, password: string): Promise<boolean> {
 export function getPlantList(): Promise<PlantListResponse> {
     let plantListUrl = `${server}PlantListAPI.do`;
     return request.get(plantListUrl).then((body: any) => { 
-        return JSON.parse(body).back as PlantListResponse;
+       try { 
+           return JSON.parse(body).back as PlantListResponse;
+       } catch(e) {
+           console.log('e', e, body);
+        }
+       return null;
     }, (reason: any) => {console.log('error', reason);});
 }
 

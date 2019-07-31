@@ -1,4 +1,4 @@
-import { getPlantList, login, getPlantDetail, TimeSpan, PlantDetailResponse } from "./growatt";
+import { PlantListResponse, getPlantList, login, getPlantDetail, TimeSpan, PlantDetailResponse, PlantData } from "./growatt";
 
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -22,12 +22,16 @@ app.use(function(req: any, res: any, next: any) {
     next();
   });
 
+function getDataClean<T extends PlantListResponse, K extends keyof PlantData>(resp: T, prop: K): string {
+    return (resp && resp.data && resp.data.length > 0 && resp.data[0]) ? resp.data[0][prop].toString() : '';
+}
+
 app.get("/current", (req: any, res: any) => {
     login(USERNAME, PASSWORD).then((loggedIn: boolean) => {
         if (loggedIn) {
             getPlantList().then((list) => {
                 console.log('list', list);
-                res.send(list.data[0].currentPower);
+                res.send(getDataClean(list, 'currentPower'));
             });
         }
     });
@@ -38,7 +42,7 @@ app.get("/today", (req: any, res: any) => {
         if (loggedIn) {
             getPlantList().then((list) => {
                 console.log('list', list);
-                res.send(list.data[0].todayEnergy);
+                res.send(getDataClean(list, 'todayEnergy'));
             });
         }
     });
@@ -49,7 +53,7 @@ app.get("/total", (req: any, res: any) => {
         if (loggedIn) {
             getPlantList().then((list) => {
                 console.log('list', list);
-                res.send(list.data[0].totalEnergy);
+                res.send(getDataClean(list, 'totalEnergy'));
             });
         }
     });
@@ -58,27 +62,32 @@ app.get("/total", (req: any, res: any) => {
 app.get("/", (req: any, res: any) => {
     let doStuff = () => {
         getPlantList().then((list) => {
-            console.log('list', list);
-            let plant = list.data[0];
-            let currentPower = plant.currentPower;
-            let totalEnergy = plant.totalEnergy;
-            let todayEnergy = plant.todayEnergy;
+            console.log('list-1', list);
+            let pre = '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Solar</title><style>body{margin:0;padding:0;}#b{width:100%;min-height:706px;background-color:white;text-align:center;vertical-align:middle;}.current{font-size:15em;}.total{font-size:3em;}</style></head><body><div id="b">'
             let date = (new Date()).toLocaleString('en-AU', { timeZone: 'Australia/Perth' });
-            let pre = '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Solar</title><style>div{width:100%;text-align:center;}.c{font-size:15em;}</style></head><body><div>'
-            let current = `<span class="c">${currentPower.split(' ')[0]}<br />${currentPower.split(' ')[1]}</span></div>`;
-            let today = `<div><span>${todayEnergy}</span> `;
-            let total = `(<span>${totalEnergy}</span>)`;
-            let dateDisplay = `<br /><span>${date}</span><br />washer/dryer < 1kW. dishwasher > 4kW</div>`;
-            let post = '<script>setTimeout(function(){window.location.reload();},60000);</script></body></html>'
+            let dateDisplay = `<br /><span class="today" id="date">${date}</span></div>`;
+            let post = '<script>setTimeout(function(){window.location.reload(1);},90000);</script></body></html>'
+            let quickPost = '<script>setTimeout(function(){window.location.reload(1);},30000);</script></body></html>';
+            let plant = list && list.data && list.data[0];
+            if (plant) {
+                let currentPower = plant.currentPower;
+                let totalEnergy = plant.totalEnergy;
+                let todayEnergy = plant.todayEnergy;
+                let current = `<span class="current" id="current">${currentPower.split(' ')[0]}<br />${currentPower.split(' ')[1]}</span><br />`;
+                let today = `<span class="today" id="today">${todayEnergy}</span> `;
+                let total = `(<span class="today" id="total">${totalEnergy}</span>)`;
             res.send(pre+current+today+total+dateDisplay+post);
-        }, () => { console.log('re-logging in'); login(USERNAME, PASSWORD).then(doStuff); });
+            } else { 
+                res.send(pre+'<span class="today" id="today">Error</span>'+dateDisplay+quickPost);
+                login(USERNAME, PASSWORD);
+            }
+        });
     };
     if (!sessionLoggedIn) {
         login(USERNAME, PASSWORD).then(doStuff);
     } else {
         doStuff();
     }
-    
 });
 
 app.get("/list", (req: any, res: any) => {
